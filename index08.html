@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Chegada - Renan</title>
+<style>
+body{margin:0;padding:15px;background:#000;color:white;font-family:Arial,sans-serif;text-align:center}h1,h2{color:#00ff66}.card{background:#111;border:1px solid #00ff66;border-radius:12px;padding:15px;margin:15px auto;max-width:900px}#relogio{font-size:28px;color:#00ff66;font-weight:bold}#alertaDanca{margin-top:15px;padding:15px;border-radius:10px;border:2px solid #00ff66;font-size:24px;font-weight:bold;animation:piscar 1s infinite}@keyframes piscar{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}input,textarea,button{width:95%;max-width:420px;padding:12px;margin:6px;border-radius:8px;border:none;font-size:16px}textarea{height:70px}button{background:#00aa44;color:white;font-weight:bold;cursor:pointer}.btn-red{background:#aa0000}.btn-blue{background:#005bbb}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}th,td{border:1px solid #555;padding:8px}th{background:#222;color:#00ff66}.ok{color:#00ff66;font-weight:bold}.atraso{color:#ffd700;font-weight:bold}.critico{color:#ff8800;font-weight:bold}.grave{color:#ff4444;font-weight:bold}.resumo{background:#050505;border:1px solid gold;border-radius:10px;padding:10px;margin:10px 0}.nome{font-size:30px;color:#fff;font-weight:bold}label{display:block;margin-top:10px;color:#00ff66;font-weight:bold}@media print{button,input,textarea{display:none}body{background:white;color:black}.card{border:1px solid black;background:white;color:black}h1,h2{color:black}}
+</style>
+</head>
+<body>
+<h1>Controle de Chegada</h1>
+<div class="card">
+  <h2>Dançarino</h2>
+  <div class="nome">🕺 Renan</div>
+</div>
+<div class="card">
+  <h2>Relógio em Tempo Real</h2>
+  <div id="relogio"></div>
+  <label>Horário Oficial para Estar Presente</label>
+  <input type="time" id="horarioOficial" value="20:00" onchange="salvarHorario(); atualizarAlerta(); mostrarRelatorio();">
+  <div id="alertaDanca">🕺 Horário Oficial: 20:00</div>
+</div>
+<div class="card">
+  <h2>Registrar Chegada do Renan</h2>
+  <input type="date" id="data">
+  <input type="time" id="hora" readonly>
+  <textarea id="obs" placeholder="Observação do dia"></textarea>
+  <button onclick="usarHoraAtual()">🕺 Marcar Chegada Agora</button>
+  <button onclick="registrar()">Salvar Registro</button>
+</div>
+<div class="card">
+  <h2>Relatório do Renan</h2>
+  <button class="btn-blue" onclick="window.print()">Salvar / Imprimir em PDF</button>
+  <button class="btn-red" onclick="limpar()">Limpar Histórico</button>
+  <div id="relatorio"></div>
+</div>
+<script>
+const NOME_DANCARINO = "Renan";
+let registros = JSON.parse(localStorage.getItem("controleChegadaRenan")) || [];
+const horarioSalvo = localStorage.getItem("horarioOficialRenan");
+if(horarioSalvo) document.getElementById("horarioOficial").value = horarioSalvo;
+document.getElementById("data").valueAsDate = new Date();
+function salvarHorario(){localStorage.setItem("horarioOficialRenan", document.getElementById("horarioOficial").value)}
+function atualizarRelogio(){const agora=new Date();document.getElementById("relogio").innerHTML=agora.toLocaleDateString("pt-BR")+" - "+agora.toLocaleTimeString("pt-BR");atualizarAlerta()}
+setInterval(atualizarRelogio,1000);atualizarRelogio();
+function minutosHorario(hora){const p=hora.split(":");return Number(p[0])*60+Number(p[1])}
+function atualizarAlerta(){const horario=document.getElementById("horarioOficial").value||"20:00";const limite=minutosHorario(horario);const agora=new Date();const atual=agora.getHours()*60+agora.getMinutes();const alerta=document.getElementById("alertaDanca");if(atual<=limite){alerta.innerHTML="🕺✅ Renan dentro do horário oficial: "+horario;alerta.style.color="#00ff66";alerta.style.borderColor="#00ff66"}else if(atual<=limite+30){alerta.innerHTML="⚠️🕺 Renan em atraso";alerta.style.color="gold";alerta.style.borderColor="gold"}else if(atual<limite+60){alerta.innerHTML="🚨🕺 Atraso crítico do Renan";alerta.style.color="orange";alerta.style.borderColor="orange"}else{alerta.innerHTML="❌🕺 Falta grave do Renan";alerta.style.color="#ff4444";alerta.style.borderColor="#ff4444"}}
+function usarHoraAtual(){const agora=new Date();const h=String(agora.getHours()).padStart(2,"0");const m=String(agora.getMinutes()).padStart(2,"0");document.getElementById("hora").value=`${h}:${m}`;document.getElementById("data").valueAsDate=agora}
+function calcularStatus(hora){const totalMin=minutosHorario(hora);const limite=minutosHorario(document.getElementById("horarioOficial").value||"20:00");let status="", atraso=0;if(totalMin<=limite){status="✅ Presente no Horário";atraso=0}else if(totalMin<=limite+30){status="🟡 Atrasado";atraso=totalMin-limite}else if(totalMin<limite+60){status="🟠 Atraso Crítico";atraso=totalMin-limite}else{status="🔴 Falta Grave";atraso=totalMin-limite}return {status, atraso}}
+function registrar(){const data=document.getElementById("data").value;const hora=document.getElementById("hora").value;const obs=document.getElementById("obs").value;if(!data||!hora){alert("Clique em Marcar Chegada Agora antes de salvar.");return}const c=calcularStatus(hora);registros.push({nome:NOME_DANCARINO,data,hora,horarioOficial:document.getElementById("horarioOficial").value,status:c.status,atraso:c.atraso,obs});localStorage.setItem("controleChegadaRenan",JSON.stringify(registros));document.getElementById("obs").value="";document.getElementById("hora").value="";mostrarRelatorio()}
+function mostrarRelatorio(){const div=document.getElementById("relatorio");if(registros.length===0){div.innerHTML="<p>Nenhum registro salvo ainda.</p>";return}const total=registros.length;const pontual=registros.filter(r=>r.status.includes("Presente")).length;const atrasado=registros.filter(r=>r.status.includes("Atrasado")&&!r.status.includes("Crítico")).length;const critico=registros.filter(r=>r.status.includes("Crítico")).length;const grave=registros.filter(r=>r.status.includes("Grave")).length;const porcentagem=(pontual/total)*100;let html=`<div class="resumo"><h3>🕺 Renan</h3><p>Horário oficial atual: <strong>${document.getElementById("horarioOficial").value}</strong></p><p>Total de registros: ${total}</p><p>Pontualidade: <strong>${porcentagem.toFixed(1)}%</strong></p><p>No horário: ${pontual}</p><p>Atrasos: ${atrasado}</p><p>Atrasos críticos: ${critico}</p><p>Faltas graves: ${grave}</p></div><table><tr><th>Data</th><th>Hora</th><th>Horário Oficial</th><th>Status</th><th>Atraso</th><th>Observação</th></tr>`;registros.forEach(r=>{let classe="ok";if(r.status.includes("Atrasado"))classe="atraso";if(r.status.includes("Crítico"))classe="critico";if(r.status.includes("Grave"))classe="grave";html+=`<tr><td>${formatarData(r.data)}</td><td>${r.hora}</td><td>${r.horarioOficial||"20:00"}</td><td class="${classe}">${r.status}</td><td>${r.atraso} min</td><td>${r.obs||"-"}</td></tr>`});html+="</table>";div.innerHTML=html}
+function formatarData(data){const p=data.split("-");return `${p[2]}/${p[1]}/${p[0]}`}
+function limpar(){if(confirm("Deseja apagar todo o histórico do Renan?")){localStorage.removeItem("controleChegadaRenan");registros=[];mostrarRelatorio()}}
+mostrarRelatorio();
+</script>
+</body>
+</html>
