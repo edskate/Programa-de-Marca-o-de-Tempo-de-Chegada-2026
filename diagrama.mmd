@@ -1,0 +1,15 @@
+flowchart TD
+    A[Início do controle de chegada] --> B[Carregar registros de chegada]
+    B --> C{Tem dados anteriores disponíveis?}
+    C -- Sim --> D[Calcular pontualidade do período anterior]
+    C -- Não --> E[Gerar dados de exemplo]
+    E --> D
+    D --> F[Calcular pontualidade do período atual]
+    F --> G[Calcular porcentagem de ponto]
+    G --> H[Calcular porcentagem de aprimoramento]
+    H --> I[Exibir relatórios e indicadores]
+    I --> J[Fim]
+
+    style A fill:#e8f4ff,stroke:#1f77b4
+    style I fill:#e2ffe2,stroke:#2ca02c
+    style J fill:#f7f7f7,stroke:#999

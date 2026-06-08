@@ -1,0 +1,462 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Chegada por Dançarino</title>
+
+<style>
+body{
+  background:#000;
+  color:white;
+  font-family:Arial,sans-serif;
+  padding:15px;
+  text-align:center;
+}
+
+h1{color:#00ff66;}
+
+.card{
+  background:#111;
+  border:1px solid #00ff66;
+  border-radius:12px;
+  padding:15px;
+  margin:15px auto;
+  max-width:700px;
+}
+
+input,select,button{
+  width:95%;
+  max-width:400px;
+  padding:12px;
+  margin:6px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+
+button{
+  background:#00aa44;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{background:#00cc55;}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  font-size:14px;
+}
+
+th,td{
+  border:1px solid #555;
+  padding:8px;
+}
+
+th{
+  background:#222;
+  color:#00ff66;
+}
+
+.ok{color:#00ff66;font-weight:bold;}
+.atraso{color:#ffd700;font-weight:bold;}
+.grave{color:#ff4444;font-weight:bold;}
+
+.resumo{
+  background:#050505;
+  border:1px solid gold;
+  border-radius:10px;
+  padding:10px;
+  margin:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Controle de Chegada dos Dançarinos</h1>
+
+<div class="card">
+  <h2>Registrar Chegada</h2>
+
+  <select id="dancarino">
+    <option>Renan</option>
+    <option>Abizael</option>
+    <option>Patrick</option>
+    <option>Jhonny Mendes</option>
+    <option>João</option>
+    <option>Murilo</option>
+  </select>
+
+  <input type="date" id="data">
+  <input type="time" id="hora">
+
+  <button onclick="registrar()">Salvar Chegada</button>
+</div>
+
+<div class="card">
+  <h2>Relatório Geral</h2>
+  <button onclick="limpar()">Limpar Histórico</button>
+
+  <div id="relatorio"></div>
+</div>
+
+<script>
+let registros = JSON.parse(localStorage.getItem("controleChegada")) || [];
+
+document.getElementById("data").valueAsDate = new Date();
+
+function registrar(){
+  let nome = document.getElementById("dancarino").value;
+  let data = document.getElementById("data").value;
+  let hora = document.getElementById("hora").value;
+
+  if(!data || !hora){
+    alert("Preencha data e horário.");
+    return;
+  }
+
+  let status = "";
+  let minutosAtraso = 0;
+
+  let chegada = hora.split(":");
+  let h = Number(chegada[0]);
+  let m = Number(chegada[1]);
+
+  let totalMin = h * 60 + m;
+  let limite = 20 * 60;
+
+  if(totalMin <= limite){
+    status = "Chegou dentro do horário";
+  }else if(totalMin <= 20 * 60 + 30){
+    status = "Atrasado";
+    minutosAtraso = totalMin - limite;
+  }else if(totalMin < 21 * 60){
+    status = "Atraso crítico";
+    minutosAtraso = totalMin - limite;
+  }else{
+    status = "Falta grave / chegou após 21:00";
+    minutosAtraso = totalMin - limite;
+  }
+
+  registros.push({
+    nome,
+    data,
+    hora,
+    status,
+    minutosAtraso
+  });
+
+  localStorage.setItem("controleChegada", JSON.stringify(registros));
+  mostrarRelatorio();
+}
+
+function mostrarRelatorio(){
+  let div = document.getElementById("relatorio");
+
+  if(registros.length === 0){
+    div.innerHTML = "<p>Nenhum registro salvo.</p>";
+    return;
+  }
+
+  let nomes = [...new Set(registros.map(r => r.nome))];
+
+  let html = "";
+
+  nomes.forEach(nome=>{
+    let lista = registros.filter(r => r.nome === nome);
+    let total = lista.length;
+    let pontual = lista.filter(r => r.status === "Chegou dentro do horário").length;
+    let atrasos = lista.filter(r => r.status === "Atrasado").length;
+    let graves = lista.filter(r => r.status.includes("grave") || r.status.includes("crítico")).length;
+
+    let porcentagem = (pontual / total) * 100;
+
+    html += `
+    <div class="resumo">
+      <h3>${nome}</h3>
+      <p>Total de presenças: ${total}</p>
+      <p>Pontualidade: <strong>${porcentagem.toFixed(1)}%</strong></p>
+      <p>Atrasos: ${atrasos}</p>
+      <p>Atrasos críticos / faltas graves: ${graves}</p>
+    </div>
+
+    <table>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Status</th>
+        <th>Atraso</th>
+      </tr>
+    `;
+
+    lista.forEach(r=>{
+      let classe = "ok";
+
+      if(r.status === "Atrasado") classe = "atraso";
+      if(r.status.includes("grave") || r.status.includes("crítico")) classe = "grave";
+
+      html += `
+      <tr>
+        <td>${r.data}</td>
+        <td>${r.hora}</td>
+        <td class="${classe}">${r.status}</td>
+        <td>${r.minutosAtraso} min</td>
+      </tr>
+      `;
+    });
+
+    html += "</table>";
+  });
+
+  div.innerHTML = html;
+}
+
+function limpar(){
+  if(confirm("Deseja apagar todo o histórico?")){
+    localStorage.removeItem("controleChegada");
+    registros = [];
+    mostrarRelatorio();
+  }
+}
+
+mostrarRelatorio();
+</script>
+
+</body>
+=======
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Chegada por Dançarino</title>
+
+<style>
+body{
+  background:#000;
+  color:white;
+  font-family:Arial,sans-serif;
+  padding:15px;
+  text-align:center;
+}
+
+h1{color:#00ff66;}
+
+.card{
+  background:#111;
+  border:1px solid #00ff66;
+  border-radius:12px;
+  padding:15px;
+  margin:15px auto;
+  max-width:700px;
+}
+
+input,select,button{
+  width:95%;
+  max-width:400px;
+  padding:12px;
+  margin:6px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+
+button{
+  background:#00aa44;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{background:#00cc55;}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  font-size:14px;
+}
+
+th,td{
+  border:1px solid #555;
+  padding:8px;
+}
+
+th{
+  background:#222;
+  color:#00ff66;
+}
+
+.ok{color:#00ff66;font-weight:bold;}
+.atraso{color:#ffd700;font-weight:bold;}
+.grave{color:#ff4444;font-weight:bold;}
+
+.resumo{
+  background:#050505;
+  border:1px solid gold;
+  border-radius:10px;
+  padding:10px;
+  margin:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Controle de Chegada dos Dançarinos</h1>
+
+<div class="card">
+  <h2>Registrar Chegada</h2>
+
+  <select id="dancarino">
+    <option>Renan</option>
+    <option>Abizael</option>
+    <option>Patrick</option>
+    <option>Jhonny Mendes</option>
+    <option>João</option>
+    <option>Murilo</option>
+  </select>
+
+  <input type="date" id="data">
+  <input type="time" id="hora">
+
+  <button onclick="registrar()">Salvar Chegada</button>
+</div>
+
+<div class="card">
+  <h2>Relatório Geral</h2>
+  <button onclick="limpar()">Limpar Histórico</button>
+
+  <div id="relatorio"></div>
+</div>
+
+<script>
+let registros = JSON.parse(localStorage.getItem("controleChegada")) || [];
+
+document.getElementById("data").valueAsDate = new Date();
+
+function registrar(){
+  let nome = document.getElementById("dancarino").value;
+  let data = document.getElementById("data").value;
+  let hora = document.getElementById("hora").value;
+
+  if(!data || !hora){
+    alert("Preencha data e horário.");
+    return;
+  }
+
+  let status = "";
+  let minutosAtraso = 0;
+
+  let chegada = hora.split(":");
+  let h = Number(chegada[0]);
+  let m = Number(chegada[1]);
+
+  let totalMin = h * 60 + m;
+  let limite = 20 * 60;
+
+  if(totalMin <= limite){
+    status = "Chegou dentro do horário";
+  }else if(totalMin <= 20 * 60 + 30){
+    status = "Atrasado";
+    minutosAtraso = totalMin - limite;
+  }else if(totalMin < 21 * 60){
+    status = "Atraso crítico";
+    minutosAtraso = totalMin - limite;
+  }else{
+    status = "Falta grave / chegou após 21:00";
+    minutosAtraso = totalMin - limite;
+  }
+
+  registros.push({
+    nome,
+    data,
+    hora,
+    status,
+    minutosAtraso
+  });
+
+  localStorage.setItem("controleChegada", JSON.stringify(registros));
+  mostrarRelatorio();
+}
+
+function mostrarRelatorio(){
+  let div = document.getElementById("relatorio");
+
+  if(registros.length === 0){
+    div.innerHTML = "<p>Nenhum registro salvo.</p>";
+    return;
+  }
+
+  let nomes = [...new Set(registros.map(r => r.nome))];
+
+  let html = "";
+
+  nomes.forEach(nome=>{
+    let lista = registros.filter(r => r.nome === nome);
+    let total = lista.length;
+    let pontual = lista.filter(r => r.status === "Chegou dentro do horário").length;
+    let atrasos = lista.filter(r => r.status === "Atrasado").length;
+    let graves = lista.filter(r => r.status.includes("grave") || r.status.includes("crítico")).length;
+
+    let porcentagem = (pontual / total) * 100;
+
+    html += `
+    <div class="resumo">
+      <h3>${nome}</h3>
+      <p>Total de presenças: ${total}</p>
+      <p>Pontualidade: <strong>${porcentagem.toFixed(1)}%</strong></p>
+      <p>Atrasos: ${atrasos}</p>
+      <p>Atrasos críticos / faltas graves: ${graves}</p>
+    </div>
+
+    <table>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Status</th>
+        <th>Atraso</th>
+      </tr>
+    `;
+
+    lista.forEach(r=>{
+      let classe = "ok";
+
+      if(r.status === "Atrasado") classe = "atraso";
+      if(r.status.includes("grave") || r.status.includes("crítico")) classe = "grave";
+
+      html += `
+      <tr>
+        <td>${r.data}</td>
+        <td>${r.hora}</td>
+        <td class="${classe}">${r.status}</td>
+        <td>${r.minutosAtraso} min</td>
+      </tr>
+      `;
+    });
+
+    html += "</table>";
+  });
+
+  div.innerHTML = html;
+}
+
+function limpar(){
+  if(confirm("Deseja apagar todo o histórico?")){
+    localStorage.removeItem("controleChegada");
+    registros = [];
+    mostrarRelatorio();
+  }
+}
+
+mostrarRelatorio();
+</script>
+
+</body>
+>>>>>>> 5b249e3f3e6eb4de122d9818e2e46e127f1e1a50
+</html>

@@ -1,0 +1,300 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fluxograma - Controle de Chegada</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #0b0b0b;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    color: #00ff66;
+    margin-bottom: 30px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+.box {
+    background: #111;
+    border: 2px solid #00ff66;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px auto;
+    width: 90%;
+    max-width: 420px;
+    font-weight: bold;
+    box-shadow: 0 0 12px #00ff66;
+}
+
+.start {
+    background: #e8f4ff;
+    color: #000;
+    border-color: #1f77b4;
+    box-shadow: 0 0 12px #1f77b4;
+}
+
+.report {
+    background: #e2ffe2;
+    color: #000;
+    border-color: #2ca02c;
+    box-shadow: 0 0 12px #2ca02c;
+}
+
+.end {
+    background: #f7f7f7;
+    color: #000;
+    border-color: #999;
+    box-shadow: 0 0 12px #999;
+}
+
+.decision {
+    background: #222;
+    border-color: gold;
+    color: gold;
+    box-shadow: 0 0 12px gold;
+}
+
+.arrow {
+    font-size: 28px;
+    color: #00ff66;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.option {
+    color: gold;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+    .box {
+        width: 95%;
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Fluxograma - Controle de Chegada</h1>
+
+    <div class="box start">Início do controle de chegada</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Carregar registros de chegada</div>
+    <div class="arrow">↓</div>
+
+    <div class="box decision">Tem dados anteriores disponíveis?</div>
+
+    <div class="row">
+        <div>
+            <div class="option">Sim</div>
+            <div class="arrow">↓</div>
+            <div class="box">Calcular pontualidade do período anterior</div>
+        </div>
+
+        <div>
+            <div class="option">Não</div>
+            <div class="arrow">↓</div>
+            <div class="box">Gerar dados de exemplo</div>
+            <div class="arrow">↓</div>
+            <div class="box">Calcular pontualidade do período anterior</div>
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular pontualidade do período atual</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular porcentagem de ponto</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular porcentagem de aprimoramento</div>
+    <div class="arrow">↓</div>
+
+    <div class="box report">Exibir relatórios e indicadores</div>
+    <div class="arrow">↓</div>
+
+    <div class="box end">Fim</div>
+
+</div>
+
+</body>
+=======
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fluxograma - Controle de Chegada</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #0b0b0b;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    color: #00ff66;
+    margin-bottom: 30px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+}
+
+.box {
+    background: #111;
+    border: 2px solid #00ff66;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px auto;
+    width: 90%;
+    max-width: 420px;
+    font-weight: bold;
+    box-shadow: 0 0 12px #00ff66;
+}
+
+.start {
+    background: #e8f4ff;
+    color: #000;
+    border-color: #1f77b4;
+    box-shadow: 0 0 12px #1f77b4;
+}
+
+.report {
+    background: #e2ffe2;
+    color: #000;
+    border-color: #2ca02c;
+    box-shadow: 0 0 12px #2ca02c;
+}
+
+.end {
+    background: #f7f7f7;
+    color: #000;
+    border-color: #999;
+    box-shadow: 0 0 12px #999;
+}
+
+.decision {
+    background: #222;
+    border-color: gold;
+    color: gold;
+    box-shadow: 0 0 12px gold;
+}
+
+.arrow {
+    font-size: 28px;
+    color: #00ff66;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.option {
+    color: gold;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+    .box {
+        width: 95%;
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Fluxograma - Controle de Chegada</h1>
+
+    <div class="box start">Início do controle de chegada</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Carregar registros de chegada</div>
+    <div class="arrow">↓</div>
+
+    <div class="box decision">Tem dados anteriores disponíveis?</div>
+
+    <div class="row">
+        <div>
+            <div class="option">Sim</div>
+            <div class="arrow">↓</div>
+            <div class="box">Calcular pontualidade do período anterior</div>
+        </div>
+
+        <div>
+            <div class="option">Não</div>
+            <div class="arrow">↓</div>
+            <div class="box">Gerar dados de exemplo</div>
+            <div class="arrow">↓</div>
+            <div class="box">Calcular pontualidade do período anterior</div>
+        </div>
+    </div>
+
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular pontualidade do período atual</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular porcentagem de ponto</div>
+    <div class="arrow">↓</div>
+
+    <div class="box">Calcular porcentagem de aprimoramento</div>
+    <div class="arrow">↓</div>
+
+    <div class="box report">Exibir relatórios e indicadores</div>
+    <div class="arrow">↓</div>
+
+    <div class="box end">Fim</div>
+
+</div>
+
+</body>
+>>>>>>> 5b249e3f3e6eb4de122d9818e2e46e127f1e1a50
+</html>
