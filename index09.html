@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Chegada com Histórico</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:15px;
+  background:linear-gradient(180deg,#000,#111);
+  color:white;
+  font-family:Arial, Helvetica, sans-serif;
+  text-align:center;
+}
+h1{color:#00ff66;margin-bottom:8px}
+.card{
+  background:#111;
+  border:1px solid #00ff66;
+  border-radius:14px;
+  padding:15px;
+  margin:14px auto;
+  max-width:900px;
+  box-shadow:0 0 10px rgba(0,255,102,.25);
+}
+#relogio{
+  font-size:30px;
+  font-weight:bold;
+  color:#00ff66;
+  margin:10px 0;
+}
+#alertaDanca{
+  margin:12px auto;
+  padding:15px;
+  border-radius:12px;
+  border:2px solid #00ff66;
+  font-size:22px;
+  font-weight:bold;
+  animation:piscar 1s infinite;
+}
+@keyframes piscar{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}
+input,textarea,button{
+  width:95%;
+  max-width:420px;
+  padding:12px;
+  margin:6px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+input,textarea{background:#f4f4f4;color:#000}
+textarea{height:75px;resize:vertical}
+button{
+  background:#00aa44;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{background:#00cc55}
+.btn-red{background:#aa0000}.btn-red:hover{background:#cc0000}
+.btn-blue{background:#005bbb}.btn-blue:hover{background:#0077ee}
+.btn-gold{background:#b8860b}.btn-gold:hover{background:#daa520}
+.resumo-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.boxResumo{
+  background:#050505;
+  border:1px solid gold;
+  border-radius:10px;
+  padding:10px;
+}
+.boxResumo strong{display:block;font-size:24px;color:#00ff66;margin-top:5px}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  font-size:14px;
+}
+th,td{border:1px solid #555;padding:8px;vertical-align:top}
+th{background:#222;color:#00ff66}
+.ok{color:#00ff66;font-weight:bold}.atraso{color:#ffd700;font-weight:bold}.critico{color:#ff9900;font-weight:bold}.grave{color:#ff4444;font-weight:bold}
+.pequeno{font-size:13px;color:#ccc}
+@media(max-width:600px){
+  body{padding:10px}
+  #relogio{font-size:24px}
+  #alertaDanca{font-size:18px}
+  table{font-size:12px}
+  th,td{padding:6px}
+}
+@media print{
+  button,input,textarea,#alertaDanca{display:none!important}
+  body{background:white;color:black}
+  .card{background:white;color:black;border:1px solid black;box-shadow:none}
+  h1,h2,h3,th{color:black}
+  th{background:#eee}
+}
+</style>
+</head>
+<body>
+
+<h1>🕺 Controle de Chegada</h1>
+<p class="pequeno">Sistema com histórico salvo automaticamente no navegador</p>
+
+<div class="card">
+  <h2>Dançarino</h2>
+  <input type="text" id="nomeDancarino" value="Renan" readonly>
+</div>
+
+<div class="card">
+  <h2>Relógio em Tempo Real</h2>
+  <div id="relogio"></div>
+
+  <h3>Horário Oficial para estar presente</h3>
+  <input type="time" id="horarioOficial" value="20:00" onchange="salvarHorarioOficial(); atualizarTudo();">
+  <p class="pequeno">Pode alterar o horário oficial acima. O sistema salva automaticamente.</p>
+
+  <div id="alertaDanca">🕺 Horário Oficial: 20:00</div>
+</div>
+
+<div class="card">
+  <h2>Registrar Chegada</h2>
+  <textarea id="observacao" placeholder="Observação do dia, exemplo: chegou atrasado sem justificativa"></textarea>
+  <button onclick="registrarChegada()">🕺 Marcar Chegada Agora</button>
+  <button class="btn-gold" onclick="registrarFalta()">❌ Registrar Falta Sem Chegada</button>
+</div>
+
+<div class="card">
+  <h2>Resumo</h2>
+  <div class="resumo-grid" id="resumo"></div>
+</div>
+
+<div class="card">
+  <h2>Histórico de Chegadas</h2>
+  <button class="btn-blue" onclick="window.print()">📄 Salvar / Imprimir em PDF</button>
+  <button class="btn-red" onclick="limparHistorico()">🗑️ Limpar Histórico</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Hora</th>
+        <th>Status</th>
+        <th>Atraso</th>
+        <th>Observação</th>
+      </tr>
+    </thead>
+    <tbody id="historicoTabela"></tbody>
+  </table>
+</div>
+
+<script>
+const CHAVE_HISTORICO = "historico_chegada_renan";
+const CHAVE_HORARIO = "horario_oficial_chegada";
+
+let historico = JSON.parse(localStorage.getItem(CHAVE_HISTORICO)) || [];
+
+function carregarHorarioOficial(){
+  const salvo = localStorage.getItem(CHAVE_HORARIO);
+  if(salvo){ document.getElementById("horarioOficial").value = salvo; }
+}
+
+function salvarHorarioOficial(){
+  localStorage.setItem(CHAVE_HORARIO, document.getElementById("horarioOficial").value);
+}
+
+function minutosDoHorario(horario){
+  const partes = horario.split(":");
+  return Number(partes[0]) * 60 + Number(partes[1]);
+}
+
+function formatarDataBR(data){
+  return data.toLocaleDateString("pt-BR");
+}
+
+function formatarHoraBR(data){
+  return String(data.getHours()).padStart(2,"0") + ":" + String(data.getMinutes()).padStart(2,"0");
+}
+
+function calcularStatus(totalMinutos){
+  const limite = minutosDoHorario(document.getElementById("horarioOficial").value || "20:00");
+  let atraso = Math.max(0, totalMinutos - limite);
+
+  if(totalMinutos <= limite){
+    return {status:"✅ Presente no Horário", atraso:0, classe:"ok"};
+  }
+  if(totalMinutos <= limite + 30){
+    return {status:"🟡 Atrasado", atraso, classe:"atraso"};
+  }
+  if(totalMinutos < limite + 60){
+    return {status:"🟠 Atraso Crítico", atraso, classe:"critico"};
+  }
+  return {status:"🔴 Falta Grave", atraso, classe:"grave"};
+}
+
+function atualizarRelogio(){
+  const agora = new Date();
+  document.getElementById("relogio").innerHTML =
+    agora.toLocaleDateString("pt-BR") + " - " + agora.toLocaleTimeString("pt-BR");
+  atualizarAlerta();
+}
+
+function atualizarAlerta(){
+  const agora = new Date();
+  const atual = agora.getHours() * 60 + agora.getMinutes();
+  const limite = minutosDoHorario(document.getElementById("horarioOficial").value || "20:00");
+  const alerta = document.getElementById("alertaDanca");
+
+  if(atual <= limite){
+    alerta.innerHTML = "🕺✅ Presença dentro do horário";
+    alerta.style.color = "#00ff66";
+    alerta.style.borderColor = "#00ff66";
+  }else if(atual <= limite + 30){
+    alerta.innerHTML = "⚠️🕺 Chegada em atraso";
+    alerta.style.color = "gold";
+    alerta.style.borderColor = "gold";
+  }else if(atual < limite + 60){
+    alerta.innerHTML = "🚨🕺 Atraso Crítico";
+    alerta.style.color = "orange";
+    alerta.style.borderColor = "orange";
+  }else{
+    alerta.innerHTML = "❌🕺 Falta Grave";
+    alerta.style.color = "#ff4444";
+    alerta.style.borderColor = "#ff4444";
+  }
+}
+
+function registrarChegada(){
+  const agora = new Date();
+  const total = agora.getHours() * 60 + agora.getMinutes();
+  const resultado = calcularStatus(total);
+  const obs = document.getElementById("observacao").value.trim();
+
+  const registro = {
+    nome: document.getElementById("nomeDancarino").value,
+    data: formatarDataBR(agora),
+    hora: formatarHoraBR(agora),
+    status: resultado.status,
+    atraso: resultado.atraso,
+    classe: resultado.classe,
+    observacao: obs || "-"
+  };
+
+  historico.push(registro);
+  localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(historico));
+  document.getElementById("observacao").value = "";
+  atualizarTudo();
+}
+
+function registrarFalta(){
+  const agora = new Date();
+  const obs = document.getElementById("observacao").value.trim();
+
+  const registro = {
+    nome: document.getElementById("nomeDancarino").value,
+    data: formatarDataBR(agora),
+    hora: "Sem registro",
+    status: "🔴 Falta Sem Chegada",
+    atraso: "-",
+    classe: "grave",
+    observacao: obs || "Falta sem registro de chegada"
+  };
+
+  historico.push(registro);
+  localStorage.setItem(CHAVE_HISTORICO, JSON.stringify(historico));
+  document.getElementById("observacao").value = "";
+  atualizarTudo();
+}
+
+function carregarHistorico(){
+  const tbody = document.getElementById("historicoTabela");
+  if(historico.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5">Nenhum registro salvo ainda.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = historico.map(item => `
+    <tr>
+      <td>${item.data}</td>
+      <td>${item.hora}</td>
+      <td class="${item.classe}">${item.status}</td>
+      <td>${item.atraso === "-" ? "-" : item.atraso + " min"}</td>
+      <td>${item.observacao}</td>
+    </tr>
+  `).join("");
+}
+
+function atualizarResumo(){
+  const total = historico.length;
+  const pontual = historico.filter(i => i.status.includes("Presente")).length;
+  const atrasos = historico.filter(i => i.status.includes("Atrasado")).length;
+  const criticos = historico.filter(i => i.status.includes("Crítico")).length;
+  const faltas = historico.filter(i => i.status.includes("Falta")).length;
+  const percentual = total ? ((pontual / total) * 100).toFixed(1) : "0.0";
+
+  document.getElementById("resumo").innerHTML = `
+    <div class="boxResumo">Total<strong>${total}</strong></div>
+    <div class="boxResumo">Pontualidade<strong>${percentual}%</strong></div>
+    <div class="boxResumo">No horário<strong>${pontual}</strong></div>
+    <div class="boxResumo">Atrasos<strong>${atrasos}</strong></div>
+    <div class="boxResumo">Críticos<strong>${criticos}</strong></div>
+    <div class="boxResumo">Faltas<strong>${faltas}</strong></div>
+  `;
+}
+
+function limparHistorico(){
+  if(confirm("Deseja apagar todo o histórico salvo?")){
+    historico = [];
+    localStorage.removeItem(CHAVE_HISTORICO);
+    atualizarTudo();
+  }
+}
+
+function atualizarTudo(){
+  carregarHistorico();
+  atualizarResumo();
+  atualizarAlerta();
+}
+
+carregarHorarioOficial();
+atualizarTudo();
+setInterval(atualizarRelogio, 1000);
+atualizarRelogio();
+</script>
+</body>
+</html>

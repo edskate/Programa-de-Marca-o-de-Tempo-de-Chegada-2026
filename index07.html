@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Chegada - Abizael</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:14px;background:#000;color:#fff;font-family:Arial,sans-serif;text-align:center}
+h1,h2,h3{color:#00ff66}.card{background:#111;border:1px solid #00ff66;border-radius:14px;padding:15px;margin:14px auto;max-width:900px;box-shadow:0 0 10px #003b18}
+#relogio{font-size:28px;color:#00ff66;font-weight:bold;margin:10px 0}.oficial{font-size:22px;color:#ffd700;font-weight:bold}.nome-fixo{font-size:26px;color:#fff;background:#050505;border:2px solid #00ff66;border-radius:12px;padding:14px;margin:10px auto;max-width:420px}
+input,textarea,button{width:95%;max-width:420px;padding:12px;margin:6px;border-radius:8px;border:none;font-size:16px}textarea{height:75px}button{background:#00aa44;color:white;font-weight:bold;cursor:pointer}button:hover{background:#00cc55}.btn-red{background:#aa0000}.btn-blue{background:#005bbb}.btn-gold{background:#9b7600}
+#alertaDanca{margin:15px auto;padding:15px;border-radius:12px;border:2px solid #00ff66;font-size:23px;font-weight:bold;animation:piscar 1s infinite;max-width:600px}@keyframes piscar{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}
+.resumo{background:#050505;border:1px solid gold;border-radius:12px;padding:12px;margin:12px auto;max-width:700px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.mini{background:#000;border:1px solid #333;border-radius:10px;padding:10px}.mini strong{color:#00ff66;font-size:22px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}th,td{border:1px solid #555;padding:8px;vertical-align:top}th{background:#222;color:#00ff66}.ok{color:#00ff66;font-weight:bold}.atraso{color:#ffd700;font-weight:bold}.critico{color:#ff8800;font-weight:bold}.grave{color:#ff4444;font-weight:bold}
+.aviso{font-size:14px;color:#ccc}.danger{color:#ff5555;font-weight:bold}
+@media(max-width:600px){body{padding:8px}#relogio{font-size:22px}#alertaDanca{font-size:19px}table{font-size:12px}th,td{padding:6px}}
+@media print{button,input,textarea{display:none!important}body{background:white;color:black}.card,.resumo,.mini{background:white;color:black;border:1px solid #000;box-shadow:none}h1,h2,h3{color:black}#alertaDanca{animation:none;color:black!important;border-color:black!important}.ok,.atraso,.critico,.grave{color:black}}
+</style>
+</head>
+<body>
+<h1>Controle de Chegada - Abizael</h1>
+
+<div class="card">
+  <h2>Relógio em Tempo Real</h2>
+  <div id="relogio"></div>
+  <h3>Horário Oficial para estar presente</h3>
+  <input type="time" id="horarioOficial" value="20:00" onchange="salvarHorarioOficial()">
+  <div class="oficial">Chegada permitida até: <span id="textoHorario">20:00</span></div>
+  <div id="alertaDanca">🕺✅ Presença dentro do horário</div>
+  <p class="aviso">Você pode alterar o horário oficial acima. O sistema recalcula atraso automaticamente.</p>
+</div>
+
+<div class="card">
+  <h2>Dançarino</h2>
+  <div class="nome-fixo">🕺 Abizael</div>
+  <input type="date" id="data">
+  <input type="time" id="hora" readonly>
+  <textarea id="obs" placeholder="Observação do dia"></textarea>
+  <button onclick="usarHoraAtual()">Marcar Chegada Agora</button>
+  <button onclick="registrar()">Salvar Registro do Abizael</button>
+  <button class="btn-gold" onclick="registrarFalta()">Registrar Falta sem Chegada</button>
+</div>
+
+<div class="card">
+  <h2>Relatório e Histórico</h2>
+  <button class="btn-blue" onclick="window.print()">Salvar / Imprimir em PDF</button>
+  <button class="btn-red" onclick="limpar()">Limpar Histórico</button>
+  <div id="relatorio"></div>
+</div>
+
+<script>
+const STORAGE = "controleChegadaSomenteAbizael";
+const STORAGE_HORARIO = "horarioOficialAbizael";
+let registros = JSON.parse(localStorage.getItem(STORAGE)) || [];
+
+const horarioSalvo = localStorage.getItem(STORAGE_HORARIO);
+if(horarioSalvo){ document.getElementById("horarioOficial").value = horarioSalvo; }
+document.getElementById("data").valueAsDate = new Date();
+
+function salvarHorarioOficial(){
+  const horario = document.getElementById("horarioOficial").value || "20:00";
+  localStorage.setItem(STORAGE_HORARIO, horario);
+  document.getElementById("textoHorario").textContent = horario;
+  atualizarAlerta();
+  mostrarRelatorio();
+}
+
+function minutosDeHorario(horario){
+  const p = horario.split(":");
+  return Number(p[0]) * 60 + Number(p[1]);
+}
+
+function atualizarRelogio(){
+  const agora = new Date();
+  document.getElementById("relogio").innerHTML = agora.toLocaleDateString("pt-BR") + " - " + agora.toLocaleTimeString("pt-BR");
+  atualizarAlerta();
+}
+
+function atualizarAlerta(){
+  const horario = document.getElementById("horarioOficial").value || "20:00";
+  document.getElementById("textoHorario").textContent = horario;
+  const limite = minutosDeHorario(horario);
+  const agora = new Date();
+  const atual = agora.getHours() * 60 + agora.getMinutes();
+  const alerta = document.getElementById("alertaDanca");
+
+  if(atual <= limite){
+    alerta.innerHTML = "🕺✅ Presença dentro do horário";
+    alerta.style.color = "#00ff66";
+    alerta.style.borderColor = "#00ff66";
+  }else if(atual <= limite + 30){
+    alerta.innerHTML = "⚠️🕺 Chegada em atraso";
+    alerta.style.color = "gold";
+    alerta.style.borderColor = "gold";
+  }else if(atual < limite + 60){
+    alerta.innerHTML = "🚨🕺 Atraso Crítico";
+    alerta.style.color = "orange";
+    alerta.style.borderColor = "orange";
+  }else{
+    alerta.innerHTML = "❌🕺 Falta Grave";
+    alerta.style.color = "#ff4444";
+    alerta.style.borderColor = "#ff4444";
+  }
+}
+
+setInterval(atualizarRelogio,1000);
+atualizarRelogio();
+
+function usarHoraAtual(){
+  const agora = new Date();
+  const horas = String(agora.getHours()).padStart(2,"0");
+  const minutos = String(agora.getMinutes()).padStart(2,"0");
+  document.getElementById("hora").value = `${horas}:${minutos}`;
+  document.getElementById("data").valueAsDate = agora;
+}
+
+function calcularStatus(hora){
+  const totalMin = minutosDeHorario(hora);
+  const limite = minutosDeHorario(document.getElementById("horarioOficial").value || "20:00");
+  let status = "";
+  let atraso = 0;
+  if(totalMin <= limite){
+    status = "🕺✅ Presente no Horário";
+    atraso = 0;
+  }else if(totalMin <= limite + 30){
+    status = "⚠️🕺 Atrasado";
+    atraso = totalMin - limite;
+  }else if(totalMin < limite + 60){
+    status = "🚨🕺 Atraso Crítico";
+    atraso = totalMin - limite;
+  }else{
+    status = "❌🕺 Falta Grave";
+    atraso = totalMin - limite;
+  }
+  return {status, atraso};
+}
+
+function registrar(){
+  const nome = "Abizael";
+  const data = document.getElementById("data").value;
+  const hora = document.getElementById("hora").value;
+  const obs = document.getElementById("obs").value.trim();
+  if(!data || !hora){ alert("Clique em Marcar Chegada Agora antes de salvar."); return; }
+  const calc = calcularStatus(hora);
+  registros.push({nome,data,hora,status:calc.status,atraso:calc.atraso,obs,horarioOficial:document.getElementById("horarioOficial").value || "20:00"});
+  localStorage.setItem(STORAGE, JSON.stringify(registros));
+  document.getElementById("obs").value = "";
+  document.getElementById("hora").value = "";
+  mostrarRelatorio();
+}
+
+function registrarFalta(){
+  const data = document.getElementById("data").value;
+  const obs = document.getElementById("obs").value.trim();
+  if(!data){ alert("Escolha a data da falta."); return; }
+  registros.push({nome:"Abizael",data,hora:"-",status:"❌ Falta sem registro de chegada",atraso:"-",obs,horarioOficial:document.getElementById("horarioOficial").value || "20:00"});
+  localStorage.setItem(STORAGE, JSON.stringify(registros));
+  document.getElementById("obs").value = "";
+  mostrarRelatorio();
+}
+
+function classeStatus(status){
+  if(status.includes("Presente")) return "ok";
+  if(status.includes("Atrasado")) return "atraso";
+  if(status.includes("Crítico")) return "critico";
+  return "grave";
+}
+
+function formatarData(data){
+  if(!data || !data.includes("-")) return data;
+  const p = data.split("-");
+  return `${p[2]}/${p[1]}/${p[0]}`;
+}
+
+function mostrarRelatorio(){
+  const div = document.getElementById("relatorio");
+  if(registros.length === 0){ div.innerHTML = "<p>Nenhum registro salvo ainda.</p>"; return; }
+  const total = registros.length;
+  const pontual = registros.filter(r => r.status.includes("Presente")).length;
+  const atrasado = registros.filter(r => r.status.includes("Atrasado")).length;
+  const critico = registros.filter(r => r.status.includes("Crítico")).length;
+  const grave = registros.filter(r => r.status.includes("Falta")).length;
+  const somaAtraso = registros.reduce((s,r)=> s + (Number(r.atraso) || 0), 0);
+  const porcentagem = total ? (pontual / total) * 100 : 0;
+
+  let html = `
+    <div class="resumo">
+      <h3>Resumo do Abizael</h3>
+      <div class="grid">
+        <div class="mini">Total<br><strong>${total}</strong></div>
+        <div class="mini">Pontualidade<br><strong>${porcentagem.toFixed(1)}%</strong></div>
+        <div class="mini">No horário<br><strong>${pontual}</strong></div>
+        <div class="mini">Atrasos<br><strong>${atrasado}</strong></div>
+        <div class="mini">Críticos<br><strong>${critico}</strong></div>
+        <div class="mini">Faltas<br><strong>${grave}</strong></div>
+        <div class="mini">Minutos de atraso<br><strong>${somaAtraso}</strong></div>
+      </div>
+    </div>
+    <table>
+      <tr><th>Data</th><th>Hora</th><th>Horário Oficial</th><th>Status</th><th>Atraso</th><th>Observação</th></tr>
+  `;
+
+  registros.slice().reverse().forEach(r=>{
+    html += `<tr>
+      <td>${formatarData(r.data)}</td>
+      <td>${r.hora}</td>
+      <td>${r.horarioOficial || "20:00"}</td>
+      <td class="${classeStatus(r.status)}">${r.status}</td>
+      <td>${r.atraso === "-" ? "-" : r.atraso + " min"}</td>
+      <td>${r.obs || "-"}</td>
+    </tr>`;
+  });
+  html += "</table>";
+  div.innerHTML = html;
+}
+
+function limpar(){
+  if(confirm("Deseja apagar todo o histórico do Abizael?")){
+    localStorage.removeItem(STORAGE);
+    registros = [];
+    mostrarRelatorio();
+  }
+}
+
+salvarHorarioOficial();
+mostrarRelatorio();
+</script>
+</body>
+</html>

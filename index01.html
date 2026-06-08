@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Chegada - Funcionando</title>
+
+<style>
+body{
+    background:#000;
+    color:white;
+    font-family:Arial,sans-serif;
+    text-align:center;
+    padding:20px;
+}
+
+h1{
+    color:#00ff66;
+}
+
+button{
+    padding:12px 20px;
+    background:#00aa44;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#00cc55;
+}
+
+.card{
+    background:#111;
+    border:1px solid #00ff66;
+    border-radius:10px;
+    padding:15px;
+    margin:10px auto;
+    max-width:500px;
+}
+
+.valor{
+    font-size:28px;
+    color:#00ff66;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<h1>Controle de Chegada</h1>
+
+<button onclick="executarFluxograma()">
+Executar Análise
+</button>
+
+<div id="resultado"></div>
+
+<script>
+
+function executarFluxograma(){
+
+    let registros = JSON.parse(
+        localStorage.getItem("chegadas")
+    );
+
+    // NÃO TEM DADOS
+    if(!registros || registros.length===0){
+
+        registros = [
+            {anterior:true,pontual:true},
+            {anterior:true,pontual:false},
+            {anterior:true,pontual:true},
+
+            {anterior:false,pontual:true},
+            {anterior:false,pontual:true},
+            {anterior:false,pontual:true},
+            {anterior:false,pontual:false}
+        ];
+
+        localStorage.setItem(
+            "chegadas",
+            JSON.stringify(registros)
+        );
+    }
+
+    // PERÍODO ANTERIOR
+    let anterior = registros.filter(
+        r=>r.anterior===true
+    );
+
+    // PERÍODO ATUAL
+    let atual = registros.filter(
+        r=>r.anterior===false
+    );
+
+    let pontAnterior =
+    (anterior.filter(r=>r.pontual).length /
+    anterior.length) * 100;
+
+    let pontAtual =
+    (atual.filter(r=>r.pontual).length /
+    atual.length) * 100;
+
+    let melhoria =
+    pontAtual - pontAnterior;
+
+    document.getElementById("resultado").innerHTML=`
+
+    <div class="card">
+        <h2>Pontualidade Anterior</h2>
+        <div class="valor">
+        ${pontAnterior.toFixed(1)}%
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Pontualidade Atual</h2>
+        <div class="valor">
+        ${pontAtual.toFixed(1)}%
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Aprimoramento</h2>
+        <div class="valor">
+        ${melhoria.toFixed(1)}%
+        </div>
+    </div>
+
+    `;
+}
+</script>
+
+</body>
+</html>
